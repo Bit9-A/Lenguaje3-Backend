@@ -113,31 +113,33 @@ const register = async (req, res) => {
 };
 
 
-
 const profile = async (req, res) => {
     try {
-        const { email } = req.user; 
-        const user = data.users.find(user => user.email === email);
-        
-        if (!user) {
-            return res.status(404).json({ ok: false, message: "User not found" });
-        }
-
-        const { password: _, ...userWithoutPassword } = user;
-
-        return res.json({
-            ok: true,
-            user: userWithoutPassword
-        });
+      if (!req.user || !req.user.email) {
+        return res.status(401).json({ ok: false, message: "Unauthorized" });
+      }
+  
+      const user = data.users.find(user => user.email === req.user.email);
+      
+      if (!user) {
+        return res.status(404).json({ ok: false, message: "User not found" });
+      }
+  
+      const { password, ...userWithoutPassword } = user;
+  
+      return res.json({
+        ok: true,
+        user: userWithoutPassword
+      });
     } catch (error) {
-        console.error("Profile error:", error);
-        return res.status(500).json({
-            ok: false,
-            msg: 'Server Error',
-            error: error.message
-        });
+      console.error("Profile error:", error);
+      return res.status(500).json({
+        ok: false,
+        message: 'Server Error',
+        error: error.message || 'Unknown error'
+      });
     }
-};
+  };
 
 const getAllUsers = async (req, res) => {
     try {
