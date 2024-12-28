@@ -1,9 +1,9 @@
-import { data } from "../data/data.js";
+import { ProposalModel } from '../models/proposal.model.js';
 
 const getAllProposals = async (req, res) => {
     try {
-        let proposals = data.client_proposals;
         const { search, status } = req.query;
+        let proposals = await ProposalModel.findAll();
 
         if (search) {
             proposals = proposals.filter(proposal => 
@@ -16,23 +16,10 @@ const getAllProposals = async (req, res) => {
             proposals = proposals.filter(proposal => proposal.status.toLowerCase() === status.toLowerCase());
         }
 
-      
-        const populatedProposals = proposals.map(proposal => {
-            const client = data.clients.find(client => client.id === proposal.client_id);
-            return {
-                ...proposal,
-                client: client ? { id: client.id, name: `${client.firstname} ${client.lastname}` } : null
-            };
-        });
-
-        res.status(200).json({
-            ok: true,
-            proposals: populatedProposals
-        });
+        res.status(200).json(proposals);
     } catch (error) {
         console.error("Error fetching proposals:", error);
         res.status(500).json({
-            ok: false,
             msg: 'Server Error',
             error: error.message
         });
@@ -42,30 +29,18 @@ const getAllProposals = async (req, res) => {
 const getProposalById = async (req, res) => {
     try {
         const { id } = req.params;
-        const proposal = data.client_proposals.find(proposal => proposal.id === id);
+        const proposal = await ProposalModel.findById(id);
 
         if (!proposal) {
             return res.status(404).json({
-                ok: false,
                 msg: 'Proposal not found'
             });
         }
 
-        const client = data.clients.find(client => client.id === proposal.client_id);
-
-        const populatedProposal = {
-            ...proposal,
-            client: client ? { id: client.id, name: `${client.firstname} ${client.lastname}` } : null
-        };
-
-        res.status(200).json({
-            ok: true,
-            proposal: populatedProposal
-        });
+        res.status(200).json(proposal);
     } catch (error) {
         console.error("Error fetching proposal:", error);
         res.status(500).json({
-            ok: false,
             msg: 'Server Error',
             error: error.message
         });
@@ -78,32 +53,24 @@ const createProposal = async (req, res) => {
 
         if (!client_id || !proposal_description || !budget_type_id) {
             return res.status(400).json({
-                ok: false,
                 msg: 'Client ID, proposal description, and budget type are required'
             });
         }
 
-        const newProposal = {
-            id: Math.random().toString(36).substr(2, 9),
+        const newProposal = await ProposalModel.create({
             client_id,
             proposal_description,
-            proposal_date: new Date().toISOString().split('T')[0], 
             budget_type_id,
-            status,
-            comments: []
-        };
-
-        data.client_proposals.push(newProposal);
+            status
+        });
 
         res.status(201).json({
-            ok: true,
             msg: 'Proposal created successfully',
             proposal: newProposal
         });
     } catch (error) {
         console.error("Error creating proposal:", error);
         res.status(500).json({
-            ok: false,
             msg: 'Server Error',
             error: error.message
         });
@@ -113,37 +80,28 @@ const createProposal = async (req, res) => {
 const updateProposal = async (req, res) => {
     try {
         const { id } = req.params;
-        const { client_id, proposal_description, budget_type_id, status, comments } = req.body;
+        const { client_id, proposal_description, budget_type_id, status } = req.body;
 
-        const proposalIndex = data.client_proposals.findIndex(proposal => proposal.id === id);
+        const updatedProposal = await ProposalModel.update(id, {
+            client_id,
+            proposal_description,
+            budget_type_id,
+            status
+        });
 
-        if (proposalIndex === -1) {
+        if (!updatedProposal) {
             return res.status(404).json({
-                ok: false,
                 msg: 'Proposal not found'
             });
         }
 
-        const updatedProposal = {
-            ...data.client_proposals[proposalIndex],
-            client_id: client_id || data.client_proposals[proposalIndex].client_id,
-            proposal_description: proposal_description || data.client_proposals[proposalIndex].proposal_description,
-            budget_type_id: budget_type_id || data.client_proposals[proposalIndex].budget_type_id,
-            status: status || data.client_proposals[proposalIndex].status,
-            comments: comments || data.client_proposals[proposalIndex].comments
-        };
-
-        data.client_proposals[proposalIndex] = updatedProposal;
-
         res.status(200).json({
-            ok: true,
             msg: 'Proposal updated successfully',
             proposal: updatedProposal
         });
     } catch (error) {
         console.error("Error updating proposal:", error);
         res.status(500).json({
-            ok: false,
             msg: 'Server Error',
             error: error.message
         });
@@ -153,25 +111,22 @@ const updateProposal = async (req, res) => {
 const deleteProposal = async (req, res) => {
     try {
         const { id } = req.params;
-        const proposalIndex = data.client_proposals.findIndex(proposal => proposal.id === id);
 
-        if (proposalIndex === -1) {
+        const proposal = await ProposalModel.findById(id);
+        if (!proposal) {
             return res.status(404).json({
-                ok: false,
                 msg: 'Proposal not found'
             });
         }
 
-        data.client_proposals.splice(proposalIndex, 1);
+        await ProposalModel.remove(id);
 
         res.status(200).json({
-            ok: true,
             msg: 'Proposal deleted successfully'
         });
     } catch (error) {
         console.error("Error deleting proposal:", error);
         res.status(500).json({
-            ok: false,
             msg: 'Server Error',
             error: error.message
         });

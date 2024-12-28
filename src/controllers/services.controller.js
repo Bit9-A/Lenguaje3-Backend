@@ -1,103 +1,88 @@
-import { data } from "../data/data.js";
+import { ServiceModel } from "../models/services.model.js";
 
-const getAllServices = (req, res) => {
+const getAllServices = async (req, res) => {
   try {
-    res.json({ ok: true, services: data.services });
+    const services = await ServiceModel.findAll();
+    res.json(services);
   } catch (error) {
     console.error("Error getting services:", error);
-    res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    res.status(500).json({ msg: "Error interno del servidor", error: error.message });
   }
 };
 
-
-const getServiceById = (req, res) => {
+const getServiceById = async (req, res) => {
   try {
     const serviceId = parseInt(req.params.id);
-    const service = data.services.find(s => s.id === serviceId);
-    
+    const service = await ServiceModel.findById(serviceId);
+
     if (!service) {
-      return res.status(404).json({ ok: false, message: "Servicio no encontrado" });
+      return res.status(404).json({ msg: "Servicio no encontrado" });
     }
-    
-    res.json({ ok: true, service });
+
+    res.json(service);
   } catch (error) {
     console.error("Error getting service:", error);
-    res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    res.status(500).json({ msg: "Error interno del servidor", error: error.message });
   }
 };
 
-
- const createService = (req, res) => {
+const createService = async (req, res) => {
   try {
     const { name, description, price } = req.body;
-    
+
     if (!name || !price) {
-      return res.status(400).json({ ok: false, message: "Nombre y precio son requeridos" });
+      return res.status(400).json({ msg: "Nombre y precio son requeridos" });
     }
-    
-    const newService = {
-      id: data.services.length + 1,
-      name,
-      description,
-      price: parseFloat(price)
-    };
-    
-    data.services.push(newService);
-    res.status(201).json({ ok: true, service: newService });
+
+    const newService = await ServiceModel.create({ name, description, price });
+
+    res.status(201).json(newService);
   } catch (error) {
     console.error("Error creating service:", error);
-    res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    res.status(500).json({ msg: "Error interno del servidor", error: error.message });
   }
 };
 
-
-const updateService = (req, res) => {
+const updateService = async (req, res) => {
   try {
     const serviceId = parseInt(req.params.id);
     const { name, description, price } = req.body;
-    
-    const serviceIndex = data.services.findIndex(s => s.id === serviceId);
-    
-    if (serviceIndex === -1) {
-      return res.status(404).json({ ok: false, message: "Servicio no encontrado" });
+
+    const updatedService = await ServiceModel.update(serviceId, { name, description, price });
+
+    if (!updatedService) {
+      return res.status(404).json({ msg: "Servicio no encontrado" });
     }
-    
-    data.services[serviceIndex] = {
-      ...data.services[serviceIndex],
-      name: name || data.services[serviceIndex].name,
-      description: description || data.services[serviceIndex].description,
-      price: price ? parseFloat(price) : data.services[serviceIndex].price
-    };
-    
-    res.json({ ok: true, service: data.services[serviceIndex] });
+
+    res.json(updatedService);
   } catch (error) {
     console.error("Error updating service:", error);
-    res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    res.status(500).json({ msg: "Error interno del servidor", error: error.message });
   }
 };
 
-
-const deleteService = (req, res) => {
+const deleteService = async (req, res) => {
   try {
     const serviceId = parseInt(req.params.id);
-    const serviceIndex = data.services.findIndex(s => s.id === serviceId);
-    
-    if (serviceIndex === -1) {
-      return res.status(404).json({ ok: false, message: "Servicio no encontrado" });
+
+    const service = await ServiceModel.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ msg: "Servicio no encontrado" });
     }
-    
-    const deletedService = data.services.splice(serviceIndex, 1)[0];
-    res.json({ ok: true, message: "Servicio eliminado", service: deletedService });
+
+    await ServiceModel.remove(serviceId);
+
+    res.json({ msg: "Servicio eliminado" });
   } catch (error) {
     console.error("Error deleting service:", error);
-    res.status(500).json({ ok: false, message: "Error interno del servidor" });
+    res.status(500).json({ msg: "Error interno del servidor", error: error.message });
   }
 };
 
-export const serviceController ={
-    getAllServices,
-    getServiceById,
-    createService,
-    updateService,
-    deleteService
-}
+export const ServiceController = {
+  getAllServices,
+  getServiceById,
+  createService,
+  updateService,
+  deleteService
+};

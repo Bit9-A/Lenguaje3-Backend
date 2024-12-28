@@ -9,11 +9,11 @@ const app = express();
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
-app.use('/api/v1/users', UserRouter)
-app.use('/api/v1/clients', clientRoutes);
-app.use('/api/v1/employees', employeeRoutes);
-app.use('/api/v1/proposal', proposalRoutes);
-app.use('/api/services', serviceRoutes);
+app.use('/users', UserRouter)
+app.use('/clients', clientRoutes);
+app.use('/employees', employeeRoutes);
+app.use('/proposal', proposalRoutes);
+app.use('/services', serviceRoutes);
 
 
 
