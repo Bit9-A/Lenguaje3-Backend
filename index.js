@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import express from "express"
-import UserRouter from './src/routes/user.route.js';
+import UserRouter from './src/routes/users.route.js';
 import clientRoutes from './src/routes/clients.route.js';
 import employeeRoutes from './src/routes/employee.route.js'
 import proposalRoutes from './src/routes/proposal.route.js'

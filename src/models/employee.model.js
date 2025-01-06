@@ -1,60 +1,61 @@
 import { db } from "../database/conection.js";
 
-const create = async ({ firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status }) => {
+// Operaciones CRUD para employees
+const createEmployee = async ({ firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date }) => {
   const query = {
     text: `
-      INSERT INTO employees (firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING id, firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status
+      INSERT INTO employees (firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
     `,
-    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status]
+    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date]
   };
 
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const findAll = async () => {
+const findAllEmployees = async () => {
   const query = {
-    text: 'SELECT id, firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status FROM employees'
+    text: 'SELECT * FROM employees'
   };
   const { rows } = await db.query(query);
   return rows;
 };
 
-const findById = async (id) => {
+const findEmployeeById = async (id) => {
   const query = {
-    text: 'SELECT id, firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status FROM employees WHERE id = $1',
+    text: 'SELECT * FROM employees WHERE id = $1',
     values: [id]
   };
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const findByEmail = async (email) => {
+const findEmployeeByEmail = async (email) => {
   const query = {
-    text: 'SELECT id, firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status FROM employees WHERE email = $1',
+    text: 'SELECT * FROM employees WHERE email = $1',
     values: [email]
   };
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const update = async (id, { firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status }) => {
+const updateEmployee = async (id, { firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date }) => {
   const query = {
     text: `
       UPDATE employees
-      SET firstname = $1, lastname = $2, email = $3, phone = $4, position = $5, schedule = $6, employee_type_id = $7, birthdate = $8, gender = $9, national_id = $10, hire_date = $11, status = $12
-      WHERE id = $13
-      RETURNING id, firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status
+      SET firstname = $1, lastname = $2, email = $3, phone = $4, position = $5, schedule = $6, employee_type_id = $7, birthdate = $8, gender = $9, national_id = $10, hire_date = $11
+      WHERE id = $12
+      RETURNING *
     `,
-    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, status, id]
+    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, id]
   };
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const remove = async (id) => {
+const removeEmployee = async (id) => {
   const query = {
     text: 'DELETE FROM employees WHERE id = $1',
     values: [id]
@@ -62,11 +63,70 @@ const remove = async (id) => {
   await db.query(query);
 };
 
+// Operaciones CRUD para employee_types
+const createEmployeeType = async ({ type_name }) => {
+  const query = {
+    text: `
+      INSERT INTO employee_types (type_name)
+      VALUES ($1)
+      RETURNING *
+    `,
+    values: [type_name]
+  };
+
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const findAllEmployeeTypes = async () => {
+  const query = {
+    text: 'SELECT * FROM employee_types'
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const findEmployeeTypeById = async (id) => {
+  const query = {
+    text: 'SELECT * FROM employee_types WHERE id = $1',
+    values: [id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const updateEmployeeType = async (id, { type_name }) => {
+  const query = {
+    text: `
+      UPDATE employee_types
+      SET type_name = $1
+      WHERE id = $2
+      RETURNING *
+    `,
+    values: [type_name, id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const removeEmployeeType = async (id) => {
+  const query = {
+    text: 'DELETE FROM employee_types WHERE id = $1',
+    values: [id]
+  };
+  await db.query(query);
+};
+
 export const EmployeeModel = {
-  create,
-  findAll,
-  findById,
-  findByEmail,
-  update,
-  remove
+  createEmployee,
+  findAllEmployees,
+  findEmployeeById,
+  findEmployeeByEmail,
+  updateEmployee,
+  removeEmployee,
+  createEmployeeType,
+  findAllEmployeeTypes,
+  findEmployeeTypeById,
+  updateEmployeeType,
+  removeEmployeeType
 };
