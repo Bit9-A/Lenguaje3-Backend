@@ -11,16 +11,27 @@ const createMaterial = async ({ name, price, material_type_id }) => {
     values: [name, price, material_type_id]
   };
 
-  const { rows } = await db.query(query);
-  return rows[0];
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error creating material:', error);
+    throw error;
+  }
 };
 
 const findAllMaterials = async () => {
   const query = {
     text: 'SELECT * FROM materials'
   };
-  const { rows } = await db.query(query);
-  return rows;
+
+  try {
+    const { rows } = await db.query(query);
+    return rows;
+  } catch (error) {
+    console.error('Error fetching materials:', error);
+    throw error;
+  }
 };
 
 const findMaterialById = async (id) => {
@@ -28,8 +39,14 @@ const findMaterialById = async (id) => {
     text: 'SELECT * FROM materials WHERE id = $1',
     values: [id]
   };
-  const { rows } = await db.query(query);
-  return rows[0];
+
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error fetching material by id:', error);
+    throw error;
+  }
 };
 
 const updateMaterial = async (id, { name, price, material_type_id }) => {
@@ -42,8 +59,14 @@ const updateMaterial = async (id, { name, price, material_type_id }) => {
     `,
     values: [name, price, material_type_id, id]
   };
-  const { rows } = await db.query(query);
-  return rows[0];
+
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error updating material:', error);
+    throw error;
+  }
 };
 
 const removeMaterial = async (id) => {
@@ -51,10 +74,46 @@ const removeMaterial = async (id) => {
     text: 'DELETE FROM materials WHERE id = $1',
     values: [id]
   };
-  await db.query(query);
+
+  try {
+    await db.query(query);
+    return { message: 'Material deleted successfully' };
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    throw error;
+  }
 };
 
 // Operaciones CRUD para material_types
+const findAllMaterialTypes = async () => {
+  const query = {
+    text: 'SELECT * FROM material_types'
+  };
+
+  try {
+    const { rows } = await db.query(query);
+    return rows;
+  } catch (error) {
+    console.error('Error fetching material types:', error);
+    throw error;
+  }
+};
+
+const findMaterialTypeById = async (id) => {
+  const query = {
+    text: 'SELECT * FROM material_types WHERE id = $1',
+    values: [id]
+  };
+
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error fetching material type by id:', error);
+    throw error;
+  }
+};
+
 const createMaterialType = async ({ name }) => {
   const query = {
     text: `
@@ -65,25 +124,13 @@ const createMaterialType = async ({ name }) => {
     values: [name]
   };
 
-  const { rows } = await db.query(query);
-  return rows[0];
-};
-
-const findAllMaterialTypes = async () => {
-  const query = {
-    text: 'SELECT * FROM material_types'
-  };
-  const { rows } = await db.query(query);
-  return rows;
-};
-
-const findMaterialTypeById = async (id) => {
-  const query = {
-    text: 'SELECT * FROM material_types WHERE id = $1',
-    values: [id]
-  };
-  const { rows } = await db.query(query);
-  return rows[0];
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error creating material type:', error);
+    throw error;
+  }
 };
 
 const updateMaterialType = async (id, { name }) => {
@@ -96,8 +143,14 @@ const updateMaterialType = async (id, { name }) => {
     `,
     values: [name, id]
   };
-  const { rows } = await db.query(query);
-  return rows[0];
+
+  try {
+    const { rows } = await db.query(query);
+    return rows[0];
+  } catch (error) {
+    console.error('Error updating material type:', error);
+    throw error;
+  }
 };
 
 const removeMaterialType = async (id) => {
@@ -105,18 +158,25 @@ const removeMaterialType = async (id) => {
     text: 'DELETE FROM material_types WHERE id = $1',
     values: [id]
   };
-  await db.query(query);
+
+  try {
+    await db.query(query);
+    return { message: 'Material type deleted successfully' };
+  } catch (error) {
+    console.error('Error deleting material type:', error);
+    throw error;
+  }
 };
 
-export const MaterialModel = {
+export {
   createMaterial,
   findAllMaterials,
   findMaterialById,
   updateMaterial,
   removeMaterial,
-  createMaterialType,
   findAllMaterialTypes,
   findMaterialTypeById,
+  createMaterialType,
   updateMaterialType,
   removeMaterialType
 };

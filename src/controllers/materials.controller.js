@@ -1,4 +1,4 @@
-import { MaterialModel } from '../models/materials.model.js';
+import * as MaterialModel from '../models/materials.model.js';
 
 // Controladores para materials
 const getAllMaterials = async (req, res) => {

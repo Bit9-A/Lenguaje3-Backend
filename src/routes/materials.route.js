@@ -5,17 +5,25 @@ import { verifyToken } from '../middlewares/jwt.middleware.js';
 const router = express.Router();
 
 // Rutas para materials
-router.get('/', verifyToken, MaterialController.getAllMaterials);
-router.get('/:id', verifyToken, MaterialController.getMaterialById);
-router.post('/', verifyToken, MaterialController.createMaterial);
-router.put('/:id', verifyToken, MaterialController.updateMaterial);
-router.delete('/:id', verifyToken, MaterialController.deleteMaterial);
+router.route('/')
+  .get(verifyToken, MaterialController.getAllMaterials)
+  .post(verifyToken, MaterialController.createMaterial);
+
+router.route('/:id')
+  .get(verifyToken, MaterialController.getMaterialById)
+  .put(verifyToken, MaterialController.updateMaterial)
+  .delete(verifyToken, MaterialController.deleteMaterial);
 
 // Rutas para material_types
-router.get('/types', verifyToken, MaterialController.getAllMaterialTypes);
-router.get('/types/:id', verifyToken, MaterialController.getMaterialTypeById);
-router.post('/types', verifyToken, MaterialController.createMaterialType);
-router.put('/types/:id', verifyToken, MaterialController.updateMaterialType);
-router.delete('/types/:id', verifyToken, MaterialController.deleteMaterialType);
+router.route('/types/all')
+  .get(verifyToken, MaterialController.getAllMaterialTypes);
+
+router.route('/types/:id')
+  .get(verifyToken, MaterialController.getMaterialTypeById)
+  .put(verifyToken, MaterialController.updateMaterialType)
+  .delete(verifyToken, MaterialController.deleteMaterialType);
+
+router.route('/types/create')
+  .post(verifyToken, MaterialController.createMaterialType);
 
 export default router;

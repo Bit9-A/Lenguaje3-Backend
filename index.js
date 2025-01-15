@@ -8,12 +8,13 @@ import proposalRoutes from './src/routes/proposal.route.js';
 import serviceRoutes from './src/routes/services.route.js';
 import projectsRouter from './src/routes/projects.route.js';
 import notifications from './src/routes/notifications.route.js';
-
+import materialRoutes from './src/routes/materials.route.js';
+import dashboardRoutes from './src/routes/dashboard.route.js';
 const app = express();
 
 // Configurar CORS
 app.use(cors({
-  origin: 'http://localhost:8000', // Reemplaza con la URL de tu frontend
+  origin: 'http://localhost:10000', 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true
 }));
@@ -24,10 +25,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/users', UserRouter);
 app.use('/clients', clientRoutes);
 app.use('/employees', employeeRoutes);
-app.use('/proposal', proposalRoutes);
+app.use('/materials', materialRoutes);
+app.use('/proposals', proposalRoutes);
 app.use('/services', serviceRoutes);
 app.use('/projects', projectsRouter);
 app.use('/notifications', notifications);
+app.use('/dashboard',dashboardRoutes); 
 
 const PORT = process.env.PORT || 3000;
 

@@ -4,34 +4,54 @@ import { verifyToken } from '../middlewares/jwt.middleware.js';
 
 const router = express.Router();
 
-// Rutas para projects
-router.get('/', verifyToken, ProjectController.getAllProjects);
-router.get('/:id', verifyToken, ProjectController.getProjectById);
-router.post('/', verifyToken, ProjectController.createProject);
-router.put('/:id', verifyToken, ProjectController.updateProject);
-router.delete('/:id', verifyToken, ProjectController.deleteProject);
+// Rutas para proyectos
+router.route('/')
+  .get(verifyToken, ProjectController.getAllProjects)
+  .post(verifyToken, ProjectController.createProject);
 
-// Rutas para obtener empleados, materiales, servicios, progreso y fotos de un proyecto específico
-router.get('/:project_id/employees', verifyToken, ProjectController.getEmployeesByProjectId);
-router.get('/:project_id/materials', verifyToken, ProjectController.getMaterialsByProjectId);
-router.get('/:project_id/services', verifyToken, ProjectController.getServicesByProjectId);
-router.get('/:project_id/progress', verifyToken, ProjectController.getProgressByProjectId);
-router.get('/:project_id/photos', verifyToken, ProjectController.getPhotosByProjectId);
+router.route('/:id')
+  .get(verifyToken, ProjectController.getProjectById)
+  .put(verifyToken, ProjectController.updateProject)
+  .delete(verifyToken, ProjectController.deleteProject);
 
-// Rutas para añadir, borrar y modificar empleados, materiales, servicios, progreso y fotos en un proyecto específico
-router.post('/employees', verifyToken, ProjectController.addEmployeeToProject);
-router.delete('/employees/:project_id/:employee_id', verifyToken, ProjectController.removeEmployeeFromProject);
+// Rutas para empleados en un proyecto específico
+router.route('/:project_id/employees')
+  .get(verifyToken, ProjectController.getEmployeesByProjectId)
+  .post(verifyToken, ProjectController.addEmployeeToProject);
 
-router.post('/materials', verifyToken, ProjectController.addMaterialToProject);
-router.delete('/materials/:project_id/:material_id', verifyToken, ProjectController.removeMaterialFromProject);
+router.route('/:project_id/employees/:employee_id')
+  .delete(verifyToken, ProjectController.removeEmployeeFromProject);
 
-router.post('/services', verifyToken, ProjectController.addServiceToProject);
-router.delete('/services/:project_id/:service_id', verifyToken, ProjectController.removeServiceFromProject);
+// Rutas para materiales en un proyecto específico
+router.route('/:project_id/materials')
+  .get(verifyToken, ProjectController.getMaterialsByProjectId)
+  .post(verifyToken, ProjectController.addMaterialToProject);
 
-router.post('/progress', verifyToken, ProjectController.addProgressToProject);
-router.delete('/progress/:id', verifyToken, ProjectController.removeProgressFromProject);
+router.route('/:project_id/materials/:material_id')
+  .delete(verifyToken, ProjectController.removeMaterialFromProject);
 
-router.post('/photos', verifyToken, ProjectController.addPhotoToProject);
-router.delete('/photos/:id', verifyToken, ProjectController.removePhotoFromProject);
+// Rutas para servicios en un proyecto específico
+router.route('/:project_id/services')
+  .get(verifyToken, ProjectController.getServicesByProjectId)
+  .post(verifyToken, ProjectController.addServiceToProject);
+
+router.route('/:project_id/services/:service_id')
+  .delete(verifyToken, ProjectController.removeServiceFromProject);
+
+// Rutas para progreso en un proyecto específico
+router.route('/:project_id/progress')
+  .get(verifyToken, ProjectController.getProgressByProjectId)
+  .post(verifyToken, ProjectController.addProgressToProject);
+
+router.route('/:project_id/progress/:id')
+  .delete(verifyToken, ProjectController.removeProgressFromProject);
+
+// Rutas para fotos en un proyecto específico
+router.route('/:project_id/photos')
+  .get(verifyToken, ProjectController.getPhotosByProjectId)
+  .post(verifyToken, ProjectController.addPhotoToProject);
+
+router.route('/:project_id/photos/:id')
+  .delete(verifyToken, ProjectController.removePhotoFromProject);
 
 export default router;

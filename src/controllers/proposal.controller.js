@@ -112,7 +112,7 @@ const deleteProposal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const proposal = await ProposalModel.findById(id);
+    const proposal = await ProposalModel.remove(id);
     if (!proposal) {
       return res.status(404).json({
         msg: 'Proposal not found'

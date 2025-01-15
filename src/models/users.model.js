@@ -1,23 +1,23 @@
 import { db } from "../database/conection.js";
 
 // Operaciones CRUD para users
-const createUser = async ({ name, email, password, phone, address, preferences, username, role_id, status }) => {
+const createUser = async ({ email, password, phone, preferences, username, role_id, status, employee_id }) => {
   const query = {
     text: `
-      INSERT INTO users (name, email, password, phone, address, preferences, username, role_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id, name, email, phone, address, preferences, username, role_id, status
+      INSERT INTO users (email, password, phone, preferences, username, role_id, status, employee_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, email, phone, preferences, username, role_id, status, employee_id
     `,
-    values: [name, email, password, phone, address, preferences, username, role_id, status]
+    values: [email, password, phone, preferences, username, role_id, status, employee_id]
   };
 
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const findAllUsers = async () => {
+const getAllUsers = async () => {
   const query = {
-    text: 'SELECT id, name, email, phone, address, preferences, username, role_id, status FROM users'
+    text: 'SELECT id, email, phone, preferences, username, role_id, status, employee_id FROM users'
   };
   const { rows } = await db.query(query);
   return rows;
@@ -25,8 +25,17 @@ const findAllUsers = async () => {
 
 const findUserById = async (id) => {
   const query = {
-    text: 'SELECT id, name, email, phone, address, preferences, username, role_id, status FROM users WHERE id = $1',
+    text: 'SELECT id, email, phone, preferences, username, role_id, status, employee_id FROM users WHERE id = $1',
     values: [id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const findUserByEmail = async (email) => {
+  const query = {
+    text: 'SELECT id, email, password, phone, preferences, username, role_id, status, employee_id FROM users WHERE email = $1',
+    values: [email]
   };
   const { rows } = await db.query(query);
   return rows[0];
@@ -34,22 +43,22 @@ const findUserById = async (id) => {
 
 const findUserByUsername = async (username) => {
   const query = {
-    text: 'SELECT id, name, email, phone, address, preferences, username, role_id, status FROM users WHERE username = $1',
+    text: 'SELECT id, email, phone, preferences, username, role_id, status, employee_id FROM users WHERE username = $1',
     values: [username]
   };
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const updateUser = async (id, { name, email, phone, address, preferences, username, role_id, status }) => {
+const updateUser = async (id, { email, phone, preferences, username, role_id, status, employee_id }) => {
   const query = {
     text: `
       UPDATE users
-      SET name = $1, email = $2, phone = $3, address = $4, preferences = $5, username = $6, role_id = $7, status = $8
-      WHERE id = $9
-      RETURNING id, name, email, phone, address, preferences, username, role_id, status
+      SET email = $1, phone = $2, preferences = $3, username = $4, role_id = $5, status = $6, employee_id = $7
+      WHERE id = $8
+      RETURNING id, email, phone, preferences, username, role_id, status, employee_id
     `,
-    values: [name, email, phone, address, preferences, username, role_id, status, id]
+    values: [email, phone, preferences, username, role_id, status, employee_id, id]
   };
   const { rows } = await db.query(query);
   return rows[0];
@@ -67,6 +76,56 @@ const updateUserPassword = async (id, password) => {
 const removeUser = async (id) => {
   const query = {
     text: 'DELETE FROM users WHERE id = $1',
+    values: [id]
+  };
+  await db.query(query);
+};
+
+const savePasswordResetToken = async (id, token, expiration) => {
+  const query = {
+    text: 'UPDATE users SET reset_token = $1, reset_token_expiration = $2 WHERE id = $3',
+    values: [token, expiration, id]
+  };
+  await db.query(query);
+};
+
+const findUserByResetToken = async (token) => {
+  const query = {
+    text: 'SELECT * FROM users WHERE reset_token = $1',
+    values: [token]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const clearPasswordResetToken = async (id) => {
+  const query = {
+    text: 'UPDATE users SET reset_token = NULL, reset_token_expiration = NULL WHERE id = $1',
+    values: [id]
+  };
+  await db.query(query);
+};
+
+const saveLoginToken = async (id, token, expiration) => {
+  const query = {
+    text: 'UPDATE users SET login_token = $1, login_token_expiration = $2 WHERE id = $3',
+    values: [token, expiration, id]
+  };
+  await db.query(query);
+};
+
+const findUserByLoginToken = async (token) => {
+  const query = {
+    text: 'SELECT * FROM users WHERE login_token = $1',
+    values: [token]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const clearLoginToken = async (id) => {
+  const query = {
+    text: 'UPDATE users SET login_token = NULL, login_token_expiration = NULL WHERE id = $1',
     values: [id]
   };
   await db.query(query);
@@ -128,12 +187,19 @@ const removeUserRole = async (id) => {
 
 export const UserModel = {
   createUser,
-  findAllUsers,
+  getAllUsers,
   findUserById,
+  findUserByEmail,
   findUserByUsername,
+  findUserByLoginToken,
+  findUserByResetToken,
+  saveLoginToken,
   updateUser,
   updateUserPassword,
   removeUser,
+  savePasswordResetToken,
+  findUserByResetToken,
+  clearPasswordResetToken,
   createUserRole,
   findAllUserRoles,
   findUserRoleById,
