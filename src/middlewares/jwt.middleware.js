@@ -3,6 +3,7 @@ import { UserModel } from '../models/users.model.js';
 
 export const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  
   if (!authHeader) {
     return res.status(401).json({ message: "No token provided" });
   }

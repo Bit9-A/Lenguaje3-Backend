@@ -17,14 +17,4 @@ router.post('/roles', verifyToken, UserController.createUserRole);
 router.put('/roles/:id', verifyToken, UserController.updateUserRole);
 router.delete('/roles/:id', verifyToken, UserController.deleteUserRole);
 
-// Rutas para registro, login, perfil y logout
-router.post('/register', UserController.register);
-router.post('/login', UserController.login);
-router.get('/profile/use', verifyToken, UserController.profile);
-router.post('/logout', verifyToken, UserController.logout);
-
-// Rutas para recuperación de contraseña
-router.post('/request-password-reset', UserController.requestPasswordReset);
-router.post('/reset-password', UserController.resetPassword);
-
 export default router;

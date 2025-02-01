@@ -14,44 +14,27 @@ router.route('/:id')
   .put(verifyToken, ProjectController.updateProject)
   .delete(verifyToken, ProjectController.deleteProject);
 
-// Rutas para empleados en un proyecto específico
-router.route('/:project_id/employees')
-  .get(verifyToken, ProjectController.getEmployeesByProjectId)
-  .post(verifyToken, ProjectController.addEmployeeToProject);
+// Rutas para manejar servicios en proyectos
+router.post('/add-service', verifyToken, ProjectController.addServiceToProject);
+router.delete('/remove-service/:project_id/:service_id', verifyToken, ProjectController.removeServiceFromProject);
+router.get('/services/:project_id', verifyToken, ProjectController.getServicesByProjectId);
 
-router.route('/:project_id/employees/:employee_id')
-  .delete(verifyToken, ProjectController.removeEmployeeFromProject);
+// Rutas para manejar materiales en proyectos
+router.post('/add-material', verifyToken, ProjectController.addMaterialToProject);
+router.delete('/remove-material/:project_id/:material_id', verifyToken, ProjectController.removeMaterialFromProject);
+router.put('/update-material-quantity', verifyToken, ProjectController.updateMaterialQuantity);
+router.get('/materials/:project_id', verifyToken, ProjectController.getMaterialsByProjectId);
 
-// Rutas para materiales en un proyecto específico
-router.route('/:project_id/materials')
-  .get(verifyToken, ProjectController.getMaterialsByProjectId)
-  .post(verifyToken, ProjectController.addMaterialToProject);
+// Rutas para manejar empleados en proyectos
+router.post('/add-employee', verifyToken, ProjectController.addEmployeeToProject);
+router.delete('/remove-employee/:project_id/:employee_id', verifyToken, ProjectController.removeEmployeeFromProject);
+router.get('/employees/:project_id', verifyToken, ProjectController.getEmployeesByProjectId);
 
-router.route('/:project_id/materials/:material_id')
-  .delete(verifyToken, ProjectController.removeMaterialFromProject);
+// Rutas para manejar fotos en proyectos
+router.post('/add-photo', verifyToken, ProjectController.addPhotoToProject);
+router.delete('/remove-photo/:photo_id', verifyToken, ProjectController.removePhotoFromProject);
 
-// Rutas para servicios en un proyecto específico
-router.route('/:project_id/services')
-  .get(verifyToken, ProjectController.getServicesByProjectId)
-  .post(verifyToken, ProjectController.addServiceToProject);
-
-router.route('/:project_id/services/:service_id')
-  .delete(verifyToken, ProjectController.removeServiceFromProject);
-
-// Rutas para progreso en un proyecto específico
-router.route('/:project_id/progress')
-  .get(verifyToken, ProjectController.getProgressByProjectId)
-  .post(verifyToken, ProjectController.addProgressToProject);
-
-router.route('/:project_id/progress/:id')
-  .delete(verifyToken, ProjectController.removeProgressFromProject);
-
-// Rutas para fotos en un proyecto específico
-router.route('/:project_id/photos')
-  .get(verifyToken, ProjectController.getPhotosByProjectId)
-  .post(verifyToken, ProjectController.addPhotoToProject);
-
-router.route('/:project_id/photos/:id')
-  .delete(verifyToken, ProjectController.removePhotoFromProject);
+// Ruta para recuperar el nombre del cliente a partir de la ID de la propuesta
+router.get('/client-name/:proposal_id', verifyToken, ProjectController.getClientNameByProposalId);
 
 export default router;
