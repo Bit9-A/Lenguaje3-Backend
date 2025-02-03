@@ -22,7 +22,7 @@ router.get('/services/:project_id', verifyToken, ProjectController.getServicesBy
 // Rutas para manejar materiales en proyectos
 router.post('/add-material', verifyToken, ProjectController.addMaterialToProject);
 router.delete('/remove-material/:project_id/:material_id', verifyToken, ProjectController.removeMaterialFromProject);
-router.put('/update-material-quantity', verifyToken, ProjectController.updateMaterialQuantity);
+router.put('/update-material-quantity/:project_id/:material_id', verifyToken, ProjectController.updateMaterialQuantity);
 router.get('/materials/:project_id', verifyToken, ProjectController.getMaterialsByProjectId);
 
 // Rutas para manejar empleados en proyectos
@@ -33,8 +33,11 @@ router.get('/employees/:project_id', verifyToken, ProjectController.getEmployees
 // Rutas para manejar fotos en proyectos
 router.post('/add-photo', verifyToken, ProjectController.addPhotoToProject);
 router.delete('/remove-photo/:photo_id', verifyToken, ProjectController.removePhotoFromProject);
+router.get('/photos/:project_id', verifyToken, ProjectController.getPhotosByProjectId);
 
-// Ruta para recuperar el nombre del cliente a partir de la ID de la propuesta
-router.get('/client-name/:proposal_id', verifyToken, ProjectController.getClientNameByProposalId);
+// Ruta para recuperar el nombre del cliente a partir de la ID del proyecto
+router.get('/client-name/:project_id', verifyToken, ProjectController.getClientNameByProjectId);
+
+router.get('/total-material-cost/:project_id', verifyToken, ProjectController.getTotalMaterialCostByProjectId);
 
 export default router;

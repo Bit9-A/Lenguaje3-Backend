@@ -23,9 +23,47 @@ const findAllProjects = async () => {
   return rows;
 };
 
+const findAllProjectsWithDetails = async () => {
+  const query = {
+    text: `
+     SELECT 
+        p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.proposal_id, p.is_paid,
+        CONCAT(c.firstname, ' ', c.lastname) AS client_name, c.email AS client_email,
+        (SELECT COUNT(*) FROM project_employees pe WHERE pe.project_id = p.id) AS employee_count,
+        (SELECT COUNT(*) FROM materials_project mp WHERE mp.project_id = p.id) AS material_count,
+        (SELECT COUNT(*) FROM project_services ps WHERE ps.project_id = p.id) AS service_count
+      FROM projects p
+      LEFT JOIN client_proposals cp ON p.proposal_id = cp.id
+      LEFT JOIN clients c ON cp.client_id = c.id
+    `
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
 const findProjectById = async (id) => {
   const query = {
     text: 'SELECT * FROM projects WHERE id = $1',
+    values: [id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const findProjectDetailsById = async (id) => {
+  const query = {
+    text: `
+      SELECT 
+        p.id, p.name, p.description, p.start_date, p.end_date, p.status, p.proposal_id, p.is_paid,
+        c.firstname AS client_firstname, c.lastname AS client_lastname,
+        (SELECT COUNT(*) FROM project_employees pe WHERE pe.project_id = p.id) AS employee_count,
+        (SELECT COUNT(*) FROM materials_project mp WHERE mp.project_id = p.id) AS material_count,
+        (SELECT COUNT(*) FROM project_services ps WHERE ps.project_id = p.id) AS service_count
+      FROM projects p
+      LEFT JOIN client_proposals cp ON p.proposal_id = cp.id
+      LEFT JOIN clients c ON cp.client_id = c.id
+      WHERE p.id = $1
+    `,
     values: [id]
   };
   const { rows } = await db.query(query);
@@ -55,40 +93,39 @@ const removeProject = async (id) => {
   await db.query(query);
 };
 
-// Operaciones para manejar servicios en proyectos
-const addServiceToProject = async ({ project_id, service_id, is_paid, status, end_date }) => {
+// Operaciones para manejar empleados en proyectos
+const addEmployeeToProject = async ({ project_id, employee_id }) => {
   const query = {
     text: `
-      INSERT INTO project_services (project_id, service_id, is_paid, status, end_date)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO project_employees (project_id, employee_id)
+      VALUES ($1, $2)
       RETURNING *
     `,
-    values: [project_id, service_id, is_paid, status, end_date]
+    values: [project_id, employee_id]
   };
 
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const removeServiceFromProject = async (project_id, service_id) => {
+const removeEmployeeFromProject = async (project_id, employee_id) => {
   const query = {
-    text: 'DELETE FROM project_services WHERE project_id = $1 AND service_id = $2',
-    values: [project_id, service_id]
+    text: 'DELETE FROM project_employees WHERE project_id = $1 AND employee_id = $2',
+    values: [project_id, employee_id]
   };
   await db.query(query);
 };
 
-const getServicesByProjectId = async (project_id) => {
+const getEmployeesByProjectId = async (project_id) => {
   const query = {
     text: `
-      SELECT services.id, services.name, services.description, services.price, project_services.status, project_services.is_paid, project_services.end_date
-      FROM services
-      JOIN project_services ON services.id = project_services.service_id
-      WHERE project_services.project_id = $1
+      SELECT e.id, e.firstname, e.lastname, e.email, e.phone, e.position
+      FROM project_employees pe
+      JOIN employees e ON pe.employee_id = e.id
+      WHERE pe.project_id = $1
     `,
     values: [project_id]
   };
-
   const { rows } = await db.query(query);
   return rows;
 };
@@ -134,52 +171,50 @@ const updateMaterialQuantity = async (project_id, material_id, quantity) => {
 const getMaterialsByProjectId = async (project_id) => {
   const query = {
     text: `
-      SELECT materials.id, materials.name, materials.price, materials_project.quantity, (materials.price * materials_project.quantity) AS total_cost
-      FROM materials
-      JOIN materials_project ON materials.id = materials_project.material_id
-      WHERE materials_project.project_id = $1
+      SELECT m.id, m.name, m.price, mp.quantity
+      FROM materials_project mp
+      JOIN materials m ON mp.material_id = m.id
+      WHERE mp.project_id = $1
     `,
     values: [project_id]
   };
-
   const { rows } = await db.query(query);
   return rows;
 };
 
-// Operaciones para manejar empleados en proyectos
-const addEmployeeToProject = async ({ project_id, employee_id }) => {
+// Operaciones para manejar servicios en proyectos
+const addServiceToProject = async ({ project_id, service_id, is_paid, status, end_date }) => {
   const query = {
     text: `
-      INSERT INTO project_employees (project_id, employee_id)
-      VALUES ($1, $2)
+      INSERT INTO project_services (project_id, service_id, is_paid, status, end_date)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `,
-    values: [project_id, employee_id]
+    values: [project_id, service_id, is_paid, status, end_date]
   };
 
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const removeEmployeeFromProject = async (project_id, employee_id) => {
+const removeServiceFromProject = async (project_id, service_id) => {
   const query = {
-    text: 'DELETE FROM project_employees WHERE project_id = $1 AND employee_id = $2',
-    values: [project_id, employee_id]
+    text: 'DELETE FROM project_services WHERE project_id = $1 AND service_id = $2',
+    values: [project_id, service_id]
   };
   await db.query(query);
 };
 
-const getEmployeesByProjectId = async (project_id) => {
+const getServicesByProjectId = async (project_id) => {
   const query = {
     text: `
-      SELECT employees.id, employees.firstname, employees.lastname, employees.email, employees.phone, employees.position
-      FROM employees
-      JOIN project_employees ON employees.id = project_employees.employee_id
-      WHERE project_employees.project_id = $1
+      SELECT s.id, s.name, s.description, s.price, ps.status, ps.end_date
+      FROM project_services ps
+      JOIN services s ON ps.service_id = s.id
+      WHERE ps.project_id = $1
     `,
     values: [project_id]
   };
-
   const { rows } = await db.query(query);
   return rows;
 };
@@ -188,7 +223,7 @@ const getEmployeesByProjectId = async (project_id) => {
 const addPhotoToProject = async ({ project_id, url }) => {
   const query = {
     text: `
-      INSERT INTO project_photos (project_id, url)
+      INSERT INTO project_photos (project_id, photo_url)
       VALUES ($1, $2)
       RETURNING *
     `,
@@ -207,43 +242,69 @@ const removePhotoFromProject = async (photo_id) => {
   await db.query(query);
 };
 
-// Función para recuperar el nombre del cliente a partir de la ID de la propuesta
-const getClientNameByProposalId = async (proposal_id) => {
+const getPhotosByProjectId = async (project_id) => {
   const query = {
     text: `
-      SELECT clients.firstname, clients.lastname
-      FROM clients
-      JOIN proposals ON clients.id = proposals.client_id
-      WHERE proposals.id = $1
+      SELECT pp.id, pp.photo_url, pp.description, pp.taken_at
+      FROM project_photos pp
+      WHERE pp.project_id = $1
     `,
-    values: [proposal_id]
+    values: [project_id]
   };
-
   const { rows } = await db.query(query);
-  if (rows.length > 0) {
-    return `${rows[0].firstname} ${rows[0].lastname}`;
-  } else {
-    return null;
-  }
+  return rows;
+};
+
+// Función para recuperar el nombre del cliente a partir de la ID de la propuesta
+const getClientNameByProjectId = async (project_id) => {
+  const query = {
+    text: `
+      SELECT CONCAT(c.firstname, ' ', c.lastname) AS fullname
+      FROM projects p
+      JOIN client_proposals cp ON p.proposal_id = cp.id
+      JOIN clients c ON cp.client_id = c.id
+      WHERE p.id = $1
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+const getTotalMaterialCostByProjectId = async (project_id) => {
+  const query = {
+    text: `
+      SELECT SUM(m.price * mp.quantity) AS total_material_cost
+      FROM materials_project mp
+      JOIN materials m ON mp.material_id = m.id
+      WHERE mp.project_id = $1
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0].total_material_cost;
 };
 
 export const ProjectModel = {
   createProject,
   findAllProjects,
+  findAllProjectsWithDetails,
   findProjectById,
+  findProjectDetailsById,
   updateProject,
   removeProject,
-  addServiceToProject,
-  removeServiceFromProject,
-  getServicesByProjectId,
+  addEmployeeToProject,
+  removeEmployeeFromProject,
+  getEmployeesByProjectId,
   addMaterialToProject,
   removeMaterialFromProject,
   updateMaterialQuantity,
   getMaterialsByProjectId,
-  addEmployeeToProject,
-  removeEmployeeFromProject,
-  getEmployeesByProjectId,
+  addServiceToProject,
+  removeServiceFromProject,
+  getServicesByProjectId,
   addPhotoToProject,
   removePhotoFromProject,
-  getClientNameByProposalId
+  getPhotosByProjectId,
+  getClientNameByProjectId,
+  getTotalMaterialCostByProjectId
 };

@@ -116,7 +116,35 @@ const removeEmployeeType = async (id) => {
   };
   await db.query(query);
 };
+// Contar proyectos activos en los que trabaja un empleado
+const countActiveProjectsByEmployeeId = async (employee_id) => {
+  const query = {
+    text: `
+      SELECT COUNT(*) AS active_projects
+      FROM project_employees
+      JOIN projects ON project_employees.project_id = projects.id
+      WHERE project_employees.employee_id = $1 AND projects.status = 'active'
+    `,
+    values: [employee_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0].active_projects;
+};
 
+// Contar proyectos completados en los que ha trabajado un empleado
+const countCompletedProjectsByEmployeeId = async (employee_id) => {
+  const query = {
+    text: `
+      SELECT COUNT(*) AS completed_projects
+      FROM project_employees
+      JOIN projects ON project_employees.project_id = projects.id
+      WHERE project_employees.employee_id = $1 AND projects.status = 'completed'
+    `,
+    values: [employee_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0].completed_projects;
+};
 export const EmployeeModel = {
   createEmployee,
   findAllEmployees,
@@ -128,5 +156,7 @@ export const EmployeeModel = {
   findAllEmployeeTypes,
   findEmployeeTypeById,
   updateEmployeeType,
-  removeEmployeeType
+  removeEmployeeType,
+  countActiveProjectsByEmployeeId,
+  countCompletedProjectsByEmployeeId
 };

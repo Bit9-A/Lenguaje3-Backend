@@ -25,7 +25,14 @@ const getEmployeeById = async (req, res) => {
       });
     }
 
-    res.status(200).json(employee);
+    const activeProjects = await EmployeeModel.countActiveProjectsByEmployeeId(id);
+    const completedProjects = await EmployeeModel.countCompletedProjectsByEmployeeId(id);
+
+    res.status(200).json({
+      ...employee,
+      activeProjects,
+      completedProjects
+    });
   } catch (error) {
     console.error("Error fetching employee:", error);
     res.status(500).json({

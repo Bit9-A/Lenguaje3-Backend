@@ -2,6 +2,7 @@ import bcryptjs from 'bcryptjs';
 import jwt from "jsonwebtoken";
 import nodemailer from 'nodemailer';
 import { UserModel } from '../models/users.model.js';
+import { EmployeeModel } from '../models/employee.model.js';
 
 const register = async (req, res) => {
   try {
@@ -89,7 +90,7 @@ const login = async (req, res) => {
       maxAge: 3600000
     });
 
-    res.json({ token, user: { id: user.id, email: user.email, username: user.username } });
+    res.json({ token });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({
@@ -108,10 +109,20 @@ const profile = async (req, res) => {
       return res.status(404).json({ ok: false, message: "User not found" });
     }
 
+    let employee = null;
+    if (user.employee_id) {
+      employee = await EmployeeModel.findEmployeeById(user.employee_id);
+      const activeProjects = await EmployeeModel.countActiveProjectsByEmployeeId(user.employee_id);
+      const completedProjects = await EmployeeModel.countCompletedProjectsByEmployeeId(user.employee_id);
+      employee.activeProjects = activeProjects;
+      employee.completedProjects = completedProjects;
+    }
+
     const { password: _, ...userWithoutPassword } = user;
     return res.json({
       ok: true,
-      user: userWithoutPassword
+      user: userWithoutPassword,
+      employee
     });
   } catch (error) {
     console.error("Profile error:", error);
