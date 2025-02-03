@@ -190,7 +190,7 @@ const requestPasswordReset = async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
-      secure: false, 
+      secure: process.env.SMTP_SECURE, 
       auth: {
         user: process.env.MAILJET_API_KEY,
         pass: process.env.MAILJET_SECRET_KEY
