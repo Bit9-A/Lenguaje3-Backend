@@ -1,14 +1,14 @@
 import { db } from "../database/conection.js";
 
 // Operaciones CRUD para employees
-const createEmployee = async ({ firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date }) => {
+const createEmployee = async ({ firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date }) => {
   const query = {
     text: `
       INSERT INTO employees (firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9, $10)
       RETURNING *
     `,
-    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date]
+    values: [firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date]
   };
 
   const { rows } = await db.query(query);
@@ -41,16 +41,17 @@ const findEmployeeByEmail = async (email) => {
   return rows[0];
 };
 
-const updateEmployee = async (id, { firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date }) => {
+const updateEmployee = async (id, { firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date }) => {
   const query = {
     text: `
       UPDATE employees
-      SET firstname = $1, lastname = $2, email = $3, phone = $4, position = $5, schedule = $6, employee_type_id = $7, birthdate = $8, gender = $9, national_id = $10, hire_date = $11
-      WHERE id = $12
+      SET firstname = $1, lastname = $2, email = $3, phone = $4, position = $5, employee_type_id = $6, birthdate = $7, gender = $8, national_id = $9, hire_date = $10
+      WHERE id = $11
       RETURNING *
     `,
-    values: [firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date, id]
+    values: [firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date, id]
   };
+
   const { rows } = await db.query(query);
   return rows[0];
 };

@@ -49,18 +49,19 @@ const getProposalById = async (req, res) => {
 
 const createProposal = async (req, res) => {
   try {
-    const { client_id, proposal_description, budget, status = "Pending" } = req.body;
+    const { client_id, proposal_description, budget_min, budget_max, status = "Pending" } = req.body;
 
-    if (!client_id || !proposal_description || !budget) {
+    if (!client_id || !proposal_description || budget_min === undefined || budget_max === undefined) {
       return res.status(400).json({
-        msg: 'Client ID, proposal description, and budget are required'
+        msg: 'Client ID, proposal description, budget_min, and budget_max are required'
       });
     }
 
     const newProposal = await ProposalModel.create({
       client_id,
       proposal_description,
-      budget,
+      budget_min,
+      budget_max,
       status
     });
 
@@ -133,10 +134,24 @@ const deleteProposal = async (req, res) => {
   }
 };
 
+const getPendingProposals = async (req, res) => {
+  try {
+    const proposals = await ProposalModel.findPendingProposals();
+    res.json(proposals);
+  } catch (error) {
+    console.error("Error fetching pending proposals:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
 export const ProposalController = {
   getAllProposals,
   getProposalById,
   createProposal,
   updateProposal,
-  deleteProposal
+  deleteProposal,
+  getPendingProposals
 };

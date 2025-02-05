@@ -108,6 +108,153 @@ const removePaymentType = async (id) => {
   await db.query(query);
 };
 
+// Consultas para servicios y materiales pagados y no pagados por proyectoconst findUnpaidServicesByProject = async (project_id) => {
+
+const findUnpaidServicesByProject = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+          ps.project_id,
+          ps.service_id,
+          s.name AS service_name,
+          s.price AS service_price,
+          ps.status,
+          ps.is_paid
+      FROM 
+          public.project_services ps
+      JOIN 
+          public.services s ON ps.service_id = s.id
+      WHERE 
+          ps.project_id = $1 AND ps.is_paid = false
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const findPaidServicesByProject = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+          ps.project_id,
+          ps.service_id,
+          s.name AS service_name,
+          s.price AS service_price,
+          ps.status,
+          ps.is_paid
+      FROM 
+          public.project_services ps
+      JOIN 
+          public.services s ON ps.service_id = s.id
+      WHERE 
+          ps.project_id = $1 AND ps.is_paid = true
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const findUnpaidMaterialsByProject = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+          mp.project_id,
+          mp.material_id,
+          m.name AS material_name,
+          m.price*mp.quantity AS material_price,
+          mp.quantity,
+          mp.is_paid
+      FROM 
+          public.materials_project mp
+      JOIN 
+          public.materials m ON mp.material_id = m.id
+      WHERE 
+          mp.project_id = $1 AND mp.is_paid = false
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const findPaidMaterialsByProject = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+          mp.project_id,
+          mp.material_id,
+          m.name AS material_name,
+          m.price*mp.quantity AS material_price,
+          mp.quantity,
+          mp.is_paid
+      FROM 
+          public.materials_project mp
+      JOIN 
+          public.materials m ON mp.material_id = m.id
+      WHERE 
+          mp.project_id = $1 AND mp.is_paid = true
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const calculateTotalCostByProjectId = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+          COALESCE(SUM(s.price), 0) + COALESCE(SUM(m.price * mp.quantity), 0) AS total_cost
+      FROM 
+          public.projects p
+      LEFT JOIN 
+          public.project_services ps ON p.id = ps.project_id
+      LEFT JOIN 
+          public.services s ON ps.service_id = s.id
+      LEFT JOIN 
+          public.materials_project mp ON p.id = mp.project_id
+      LEFT JOIN 
+          public.materials m ON mp.material_id = m.id
+      WHERE 
+          p.id = $1
+      GROUP BY 
+          p.id, p.name;
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+const updateServicePaymentStatus = async (project_id, service_id, is_paid) => {
+  const query = {
+    text: `
+      UPDATE public.project_services
+      SET is_paid = $3
+      WHERE project_id = $1 AND service_id = $2
+      RETURNING *
+    `,
+    values: [project_id, service_id, is_paid]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const updateMaterialPaymentStatus = async (project_id, material_id, is_paid) => {
+  const query = {
+    text: `
+      UPDATE public.materials_project
+      SET is_paid = $3
+      WHERE project_id = $1 AND material_id = $2
+      RETURNING *
+    `,
+    values: [project_id, material_id, is_paid]
+  };
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
 export const PaymentModel = {
   createPayment,
   findAllPayments,
@@ -118,5 +265,12 @@ export const PaymentModel = {
   findAllPaymentTypes,
   findPaymentTypeById,
   updatePaymentType,
-  removePaymentType
+  removePaymentType,
+  findUnpaidServicesByProject,
+  findPaidServicesByProject,
+  findUnpaidMaterialsByProject,
+  findPaidMaterialsByProject,
+  calculateTotalCostByProjectId,
+  updateServicePaymentStatus,
+  updateMaterialPaymentStatus
 };

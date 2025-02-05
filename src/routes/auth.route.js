@@ -10,5 +10,6 @@ router.get('/profile', verifyToken, AuthController.profile);
 router.post('/logout', verifyToken, AuthController.logout);
 router.post('/request-password-reset', AuthController.requestPasswordReset);
 router.post('/reset-password', AuthController.resetPassword);
+router.post('/extend-session', verifyToken, AuthController.extendSession);
 
 export default router;

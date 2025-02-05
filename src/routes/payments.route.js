@@ -18,4 +18,17 @@ router.post('/types', verifyToken, PaymentController.createPaymentType);
 router.put('/types/:id', verifyToken, PaymentController.updatePaymentType);
 router.delete('/types/:id', verifyToken, PaymentController.deletePaymentType);
 
+// Rutas para servicios y materiales pagados y no pagados por proyecto
+router.get('/unpaid-services/:project_id', verifyToken, PaymentController.getUnpaidServicesByProject);
+router.get('/paid-services/:project_id', verifyToken, PaymentController.getPaidServicesByProject);
+router.get('/unpaid-materials/:project_id', verifyToken, PaymentController.getUnpaidMaterialsByProject);
+router.get('/paid-materials/:project_id', verifyToken, PaymentController.getPaidMaterialsByProject);
+
+router.get('/total-cost/:project_id', verifyToken, PaymentController.getTotalCostByProjectId);
+router.put('/update-service-payment/use', verifyToken, PaymentController.updateServicePaymentStatus);
+router.put('/update-material-payment/use', verifyToken, PaymentController.updateMaterialPaymentStatus);
+
+router.get('/generate-excel/use', PaymentController.generateIncomeStatisticsExcel);
+
+
 export default router;

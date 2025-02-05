@@ -44,7 +44,7 @@ const getEmployeeById = async (req, res) => {
 
 const createEmployee = async (req, res) => {
   try {
-    const { firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date } = req.body;
+    const { firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date } = req.body;
 
     if (!firstname || !lastname || !email || !position || !employee_type_id) {
       return res.status(400).json({
@@ -58,7 +58,6 @@ const createEmployee = async (req, res) => {
       email,
       phone,
       position,
-      schedule,
       employee_type_id,
       birthdate,
       gender,
@@ -82,7 +81,7 @@ const createEmployee = async (req, res) => {
 const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstname, lastname, email, phone, position, schedule, employee_type_id, birthdate, gender, national_id, hire_date } = req.body;
+    const { firstname, lastname, email, phone, position, employee_type_id, birthdate, gender, national_id, hire_date } = req.body;
 
     const updatedEmployee = await EmployeeModel.updateEmployee(id, {
       firstname,
@@ -90,7 +89,6 @@ const updateEmployee = async (req, res) => {
       email,
       phone,
       position,
-      schedule,
       employee_type_id,
       birthdate,
       gender,

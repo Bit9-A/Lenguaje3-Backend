@@ -4,6 +4,7 @@ import { verifyToken } from '../middlewares/jwt.middleware.js';
 
 const router = express.Router();
 
+router.get('/pending', verifyToken, ProposalController.getPendingProposals);
 router.get('/', verifyToken, ProposalController.getAllProposals);
 router.get('/:id', verifyToken, ProposalController.getProposalById);
 router.post('/', verifyToken, ProposalController.createProposal);

@@ -40,4 +40,15 @@ router.get('/client-name/:project_id', verifyToken, ProjectController.getClientN
 
 router.get('/total-material-cost/:project_id', verifyToken, ProjectController.getTotalMaterialCostByProjectId);
 
+
+router.get('/progressC/:project_id', verifyToken, ProjectController.getCalculateProjectProgress);
+router.post('/add-progress', verifyToken, ProjectController.addProjectProgress);
+router.put('/update-progress', verifyToken, ProjectController.updateProjectProgress);
+router.get('/progress/:project_service_id', verifyToken, ProjectController.getProjectProgress);
+router.delete('/progress/:id', verifyToken, ProjectController.deleteProjectProgress);
+
+
+router.get('/service-progress/:project_service_id', verifyToken, ProjectController.getServiceProgress);
+
+
 export default router;

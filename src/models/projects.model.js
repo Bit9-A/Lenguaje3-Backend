@@ -131,37 +131,37 @@ const getEmployeesByProjectId = async (project_id) => {
 };
 
 // Operaciones para manejar materiales en proyectos
-const addMaterialToProject = async ({ project_id, material_id, quantity }) => {
+const addMaterialToProject = async ({ project_id, material_id, quantity, is_paid }) => {
   const query = {
     text: `
-      INSERT INTO materials_project (project_id, material_id, quantity)
-      VALUES ($1, $2, $3)
+      INSERT INTO materials_project (project_id, material_id, quantity, is_paid)
+      VALUES ($1, $2, $3, $4)
       RETURNING *
     `,
-    values: [project_id, material_id, quantity]
+    values: [project_id, material_id, quantity, is_paid]
   };
 
   const { rows } = await db.query(query);
   return rows[0];
 };
 
-const removeMaterialFromProject = async (project_id, material_id) => {
+const removeMaterialFromProject = async (id) => {
   const query = {
-    text: 'DELETE FROM materials_project WHERE project_id = $1 AND material_id = $2',
-    values: [project_id, material_id]
+    text: 'DELETE FROM materials_project WHERE id = $1',
+    values: [id]
   };
   await db.query(query);
 };
 
-const updateMaterialQuantity = async (project_id, material_id, quantity) => {
+const updateMaterialQuantity = async (id, quantity) => {
   const query = {
     text: `
       UPDATE materials_project
       SET quantity = $1
-      WHERE project_id = $2 AND material_id = $3
+      WHERE id = $2
       RETURNING *
     `,
-    values: [quantity, project_id, material_id]
+    values: [quantity, id]
   };
 
   const { rows } = await db.query(query);
@@ -171,7 +171,7 @@ const updateMaterialQuantity = async (project_id, material_id, quantity) => {
 const getMaterialsByProjectId = async (project_id) => {
   const query = {
     text: `
-      SELECT m.id, m.name, m.price, mp.quantity
+      SELECT m.id, m.name, m.price, mp.quantity, mp.is_paid
       FROM materials_project mp
       JOIN materials m ON mp.material_id = m.id
       WHERE mp.project_id = $1
@@ -270,6 +270,7 @@ const getClientNameByProjectId = async (project_id) => {
   const { rows } = await db.query(query);
   return rows[0];
 };
+
 const getTotalMaterialCostByProjectId = async (project_id) => {
   const query = {
     text: `
@@ -282,6 +283,102 @@ const getTotalMaterialCostByProjectId = async (project_id) => {
   };
   const { rows } = await db.query(query);
   return rows[0].total_material_cost;
+};
+
+const calculateProjectProgress = async (project_id) => {
+  const query = {
+    text: `
+      SELECT 
+        COUNT(*) FILTER (WHERE ps.status = 'Completed')::float / COUNT(*) * 100 AS progress
+      FROM project_services ps
+      WHERE ps.project_id = $1
+    `,
+    values: [project_id]
+  };
+  const { rows } = await db.query(query);
+  return rows[0].progress || 0;
+};
+
+const addProjectProgress = async ({ project_service_id, progress_description, visible, service_id }) => {
+  const query = {
+    text: `
+      INSERT INTO public.project_progress (project_service_id, progress_description, progress_date, visible, service_id)
+      VALUES ($1, $2, CURRENT_DATE, $3, $4)
+      RETURNING id, project_service_id, progress_description, progress_date, visible, service_id
+    `,
+    values: [project_service_id, progress_description, visible, service_id]
+  };
+
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const updateProjectProgress = async ({ id, progress_description, visible, service_id }) => {
+  const query = {
+    text: `
+      UPDATE public.project_progress
+      SET progress_description = $2, progress_date = CURRENT_DATE, visible = $3, service_id = $4
+      WHERE id = $1
+      RETURNING id, project_service_id, progress_description, progress_date, visible, service_id
+    `,
+    values: [id, progress_description, visible, service_id]
+  };
+
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const getProjectProgress = async (project_service_id) => {
+  const query = {
+    text: `
+      SELECT id, project_service_id, progress_description, progress_date, visible, service_id
+      FROM public.project_progress
+      WHERE project_service_id = $1
+      ORDER BY progress_date DESC
+    `,
+    values: [project_service_id]
+  };
+
+  const { rows } = await db.query(query);
+  return rows;
+};
+
+const deleteProjectProgress = async (id) => {
+  const query = {
+    text: `
+      DELETE FROM public.project_progress
+      WHERE id = $1
+      RETURNING id
+    `,
+    values: [id]
+  };
+
+  const { rows } = await db.query(query);
+  return rows[0];
+};
+
+const getServiceProgress = async (project_service_id) => {
+  const query = {
+    text: `
+      SELECT 
+          pp.id,
+          pp.project_service_id,
+          pp.progress_description,
+          pp.progress_date,
+          pp.visible,
+          pp.service_id
+      FROM 
+          public.project_progress pp
+      WHERE 
+          pp.project_service_id = $1
+      ORDER BY 
+          pp.progress_date DESC;
+    `,
+    values: [project_service_id]
+  };
+
+  const { rows } = await db.query(query);
+  return rows;
 };
 
 export const ProjectModel = {
@@ -306,5 +403,11 @@ export const ProjectModel = {
   removePhotoFromProject,
   getPhotosByProjectId,
   getClientNameByProjectId,
-  getTotalMaterialCostByProjectId
+  getTotalMaterialCostByProjectId,
+  calculateProjectProgress,
+  addProjectProgress,
+  updateProjectProgress,
+  getProjectProgress,
+  deleteProjectProgress,
+  getServiceProgress
 };

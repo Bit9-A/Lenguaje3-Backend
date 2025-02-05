@@ -1,4 +1,5 @@
 import { PaymentModel } from '../models/payments.model.js';
+import ExcelJS from 'exceljs';
 
 // Controladores para payments
 const getAllPayments = async (req, res) => {
@@ -238,6 +239,167 @@ const deletePaymentType = async (req, res) => {
   }
 };
 
+// Controladores para servicios y materiales pagados y no pagados por proyecto
+const getUnpaidServicesByProject = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const services = await PaymentModel.findUnpaidServicesByProject(project_id);
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching unpaid services:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const getPaidServicesByProject = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const services = await PaymentModel.findPaidServicesByProject(project_id);
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Error fetching paid services:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const getUnpaidMaterialsByProject = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const materials = await PaymentModel.findUnpaidMaterialsByProject(project_id);
+    res.status(200).json(materials);
+  } catch (error) {
+    console.error("Error fetching unpaid materials:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const getPaidMaterialsByProject = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const materials = await PaymentModel.findPaidMaterialsByProject(project_id);
+    res.status(200).json(materials);
+  } catch (error) {
+    console.error("Error fetching paid materials:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const getTotalCostByProjectId = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const totalCost = await PaymentModel.calculateTotalCostByProjectId(project_id);
+    res.status(200).json(totalCost);
+  } catch (error) {
+    console.error("Error calculating total cost:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+const updateServicePaymentStatus = async (req, res) => {
+  try {
+    const { project_id, service_id, is_paid } = req.body;
+
+    if (typeof is_paid !== 'boolean') {
+      return res.status(400).json({
+        msg: 'is_paid must be a boolean'
+      });
+    }
+
+    const updatedService = await PaymentModel.updateServicePaymentStatus(project_id, service_id, is_paid);
+
+    if (!updatedService) {
+      return res.status(404).json({
+        msg: 'Service not found'
+      });
+    }
+
+    res.status(200).json({
+      msg: 'Service payment status updated successfully',
+      service: updatedService
+    });
+  } catch (error) {
+    console.error("Error updating service payment status:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const updateMaterialPaymentStatus = async (req, res) => {
+  try {
+    const { project_id, material_id, is_paid } = req.body;
+
+    if (typeof is_paid !== 'boolean') {
+      return res.status(400).json({
+        msg: 'is_paid must be a boolean'
+      });
+    }
+
+    const updatedMaterial = await PaymentModel.updateMaterialPaymentStatus(project_id, material_id, is_paid);
+
+    if (!updatedMaterial) {
+      return res.status(404).json({
+        msg: 'Material not found'
+      });
+    }
+
+    res.status(200).json({
+      msg: 'Material payment status updated successfully',
+      material: updatedMaterial
+    });
+  } catch (error) {
+    console.error("Error updating material payment status:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const generateIncomeStatisticsExcel = async (req, res) => {
+  try {
+    const payments = await PaymentModel.findAllPayments();
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Estadísticas de Ingresos');
+
+    worksheet.columns = [
+      { header: 'ID del Pago', key: 'id', width: 15 },
+      { header: 'Monto', key: 'amount', width: 15 },
+      { header: 'Fecha de Pago', key: 'payment_date', width: 20 },
+      { header: 'ID del Proyecto', key: 'project_id', width: 15 },
+      { header: 'ID del Tipo de Pago', key: 'payment_type_id', width: 20 },
+      { header: 'Descripción', key: 'description', width: 30 },
+    ];
+
+    payments.forEach(payment => {
+      worksheet.addRow(payment);
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=estadisticas_ingresos.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Error generating Excel file:', error);
+    res.status(500).json({ message: 'Error generating Excel file' });
+  }
+};
 export const PaymentController = {
   getAllPayments,
   getPaymentById,
@@ -248,5 +410,13 @@ export const PaymentController = {
   getPaymentTypeById,
   createPaymentType,
   updatePaymentType,
-  deletePaymentType
+  deletePaymentType,
+  getUnpaidServicesByProject,
+  getPaidServicesByProject,
+  getUnpaidMaterialsByProject,
+  getPaidMaterialsByProject,
+  getTotalCostByProjectId,
+  updateServicePaymentStatus,
+  updateMaterialPaymentStatus,
+  generateIncomeStatisticsExcel,
 };

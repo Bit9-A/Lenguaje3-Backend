@@ -118,5 +118,5 @@ export const NotificationsAndInteractionsModel = {
   findAllClientInteractions,
   findClientInteractionById,
   updateClientInteraction,
-  removeClientInteraction
+  removeClientInteraction,
 };

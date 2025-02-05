@@ -1,4 +1,5 @@
 import { ProjectModel } from '../models/projects.model.js';
+import { ProposalModel } from '../models/proposal.model.js';
 
 const getAllProjects = async (req, res) => {
   try {
@@ -32,7 +33,13 @@ const getProjectById = async (req, res) => {
 
 const createProject = async (req, res) => {
   try {
-    const newProject = await ProjectModel.createProject(req.body);
+    const { name, description, start_date, end_date, proposal_id } = req.body;
+    const status = 'Planning';
+    const is_paid = false;
+    const newProject = await ProjectModel.createProject({ name, description, start_date, end_date, status, proposal_id, is_paid });
+
+    await ProposalModel.updateProposalStatus(proposal_id, 'Approved');
+
     res.status(201).json(newProject);
   } catch (error) {
     console.error("Error creating project:", error);
@@ -134,9 +141,25 @@ const getEmployeesByProjectId = async (req, res) => {
 // Controladores para manejar materiales en proyectos
 const addMaterialToProject = async (req, res) => {
   try {
-    const { project_id, material_id, quantity } = req.body;
-    const newMaterial = await ProjectModel.addMaterialToProject({ project_id, material_id, quantity });
-    res.status(201).json(newMaterial);
+    const { project_id, material_id, quantity, is_paid } = req.body;
+
+    if (!project_id || !material_id || !quantity) {
+      return res.status(400).json({
+        msg: 'Project ID, Material ID, and Quantity are required'
+      });
+    }
+
+    const newMaterial = await ProjectModel.addMaterialToProject({
+      project_id,
+      material_id,
+      quantity,
+      is_paid
+    });
+
+    res.status(201).json({
+      msg: 'Material added to project successfully',
+      material: newMaterial
+    });
   } catch (error) {
     console.error("Error adding material to project:", error);
     res.status(500).json({
@@ -146,26 +169,25 @@ const addMaterialToProject = async (req, res) => {
   }
 };
 
-const removeMaterialFromProject = async (req, res) => {
-  try {
-    const { project_id, material_id } = req.params;
-    await ProjectModel.removeMaterialFromProject(project_id, material_id);
-    res.status(204).send();
-  } catch (error) {
-    console.error("Error removing material from project:", error);
-    res.status(500).json({
-      msg: 'Server Error',
-      error: error.message
-    });
-  }
-};
-
 const updateMaterialQuantity = async (req, res) => {
   try {
-    const { project_id, material_id } = req.params;
-    const { quantity } = req.body;
-    const updatedMaterial = await ProjectModel.updateMaterialQuantity(project_id, material_id, quantity);
-    res.json(updatedMaterial);
+    const { id, quantity } = req.body;
+
+    if (!id || !quantity) {
+      return res.status(400).json({
+        msg: 'Material ID and Quantity are required'
+      });
+    }
+
+    const updatedMaterial = await ProjectModel.updateMaterialQuantity({
+      id,
+      quantity
+    });
+
+    res.status(200).json({
+      msg: 'Material quantity updated successfully',
+      material: updatedMaterial
+    });
   } catch (error) {
     console.error("Error updating material quantity:", error);
     res.status(500).json({
@@ -179,9 +201,40 @@ const getMaterialsByProjectId = async (req, res) => {
   try {
     const { project_id } = req.params;
     const materials = await ProjectModel.getMaterialsByProjectId(project_id);
-    res.json(materials);
+    res.json( materials );
   } catch (error) {
-    console.error("Error fetching materials for project:", error);
+    console.error("Error fetching materials by project ID:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const removeMaterialFromProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        msg: 'Material ID is required'
+      });
+    }
+
+    const deletedMaterial = await ProjectModel.removeMaterialFromProject(id);
+
+    if (!deletedMaterial) {
+      return res.status(404).json({
+        msg: 'Material not found'
+      });
+    }
+
+    res.status(200).json({
+      msg: 'Material removed from project successfully',
+      material: deletedMaterial
+    });
+  } catch (error) {
+    console.error("Error removing material from project:", error);
     res.status(500).json({
       msg: 'Server Error',
       error: error.message
@@ -304,6 +357,137 @@ const getTotalMaterialCostByProjectId = async (req, res) => {
     });
   }
 };
+const getCalculateProjectProgress = async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const progress = await ProjectModel.calculateProjectProgress(project_id);
+    res.json({ progress });
+  } catch (error) {
+    console.error("Error fetching project progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const addProjectProgress = async (req, res) => {
+  try {
+    const { project_service_id, progress_description, visible, service_id } = req.body;
+
+    if (!project_service_id || !progress_description || !service_id) {
+      return res.status(400).json({
+        msg: 'Project service ID, progress description, and service ID are required'
+      });
+    }
+
+    const newProgress = await ProjectModel.addProjectProgress({
+      project_service_id,
+      progress_description,
+      visible,
+      service_id
+    });
+
+    res.status(201).json({
+      msg: 'Project progress added successfully',
+      progress: newProgress
+    });
+  } catch (error) {
+    console.error("Error adding project progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const updateProjectProgress = async (req, res) => {
+  try {
+    const { id, progress_description, visible, service_id } = req.body;
+
+    if (!id || !progress_description || !service_id) {
+      return res.status(400).json({
+        msg: 'Progress ID, progress description, and service ID are required'
+      });
+    }
+
+    const updatedProgress = await ProjectModel.updateProjectProgress({
+      id,
+      progress_description,
+      visible,
+      service_id
+    });
+
+    res.status(200).json({
+      msg: 'Project progress updated successfully',
+      progress: updatedProgress
+    });
+  } catch (error) {
+    console.error("Error updating project progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const getProjectProgress = async (req, res) => {
+  try {
+    const { project_service_id } = req.params;
+    const progress = await ProjectModel.getProjectProgress(project_service_id);
+    res.json({ progress });
+  } catch (error) {
+    console.error("Error fetching project progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+const deleteProjectProgress = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        msg: 'Progress ID is required'
+      });
+    }
+
+    const deletedProgress = await ProjectModel.deleteProjectProgress(id);
+
+    if (!deletedProgress) {
+      return res.status(404).json({
+        msg: 'Progress not found'
+      });
+    }
+
+    res.status(200).json({
+      msg: 'Project progress deleted successfully',
+      progress: deletedProgress
+    });
+  } catch (error) {
+    console.error("Error deleting project progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
+const getServiceProgress = async (req, res) => {
+  try {
+    const { project_service_id, service_id } = req.params;
+    const progress = await ProjectModel.getServiceProgress(project_service_id, service_id);
+    res.json( progress );
+  } catch (error) {
+    console.error("Error fetching service progress:", error);
+    res.status(500).json({
+      msg: 'Server Error',
+      error: error.message
+    });
+  }
+};
 
 export const ProjectController = {
   getAllProjects,
@@ -325,5 +509,11 @@ export const ProjectController = {
   removePhotoFromProject,
   getPhotosByProjectId,
   getClientNameByProjectId,
-  getTotalMaterialCostByProjectId
+  getTotalMaterialCostByProjectId,
+  getCalculateProjectProgress,
+  addProjectProgress,
+  updateProjectProgress,
+  getProjectProgress,
+  deleteProjectProgress,
+  getServiceProgress
 };

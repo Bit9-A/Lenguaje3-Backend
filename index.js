@@ -11,6 +11,7 @@ import notifications from './src/routes/notifications.route.js';
 import materialRoutes from './src/routes/materials.route.js';
 import dashboardRoutes from './src/routes/dashboard.route.js';
 import AuthRoutes from './src/routes/auth.route.js';
+import PaymentRoutes from './src/routes/payments.route.js';
 const app = express();
 
 // Configurar CORS
@@ -31,6 +32,7 @@ app.use('/materials', materialRoutes);
 app.use('/proposals', proposalRoutes);
 app.use('/services', serviceRoutes);
 app.use('/projects', projectsRouter);
+app.use('/payments', PaymentRoutes);
 app.use('/',AuthRoutes)
 app.use('/notifications', notifications);
 app.use('/dashboard',dashboardRoutes); 

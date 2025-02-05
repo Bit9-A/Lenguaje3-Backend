@@ -248,11 +248,38 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const extendSession = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const user = await UserModel.findUserById(decoded.userId);
+
+    if (!user) {
+      return res.status(403).json({ message: "Invalid token" });
+    }
+
+    const newToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.SECRET_KEY,
+      { expiresIn: '1h' }
+    );
+
+    const expiration = new Date(Date.now() + 3600000); // 1 hour from now
+    await UserModel.saveLoginToken(user.id, newToken, expiration);
+
+    res.json({ token: newToken });
+  } catch (error) {
+    console.error("Error extending session:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 export const AuthController = {
   register,
   login,
   profile,
   logout,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
+  extendSession
 };

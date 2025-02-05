@@ -96,14 +96,28 @@ CREATE TABLE IF NOT EXISTS public.materials
     CONSTRAINT materials_pkey PRIMARY KEY (id)
 );
 
+-- Table: public.materials_project
+
+-- DROP TABLE IF EXISTS public.materials_project;
+
 CREATE TABLE IF NOT EXISTS public.materials_project
 (
-    id bigserial NOT NULL,
+    id bigint NOT NULL DEFAULT nextval('materials_project_id_seq'::regclass),
     material_id bigint,
     quantity integer NOT NULL,
     project_id bigint,
-    CONSTRAINT materials_project_pkey PRIMARY KEY (id)
-);
+    is_paid boolean,
+    CONSTRAINT materials_project_pkey PRIMARY KEY (id),
+    CONSTRAINT materials_project_material_id_fkey FOREIGN KEY (material_id)
+        REFERENCES public.materials (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT materials_project_project_id_fkey FOREIGN KEY (project_id)
+        REFERENCES public.projects (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
 
 CREATE TABLE IF NOT EXISTS public.notifications
 (
@@ -156,12 +170,21 @@ CREATE TABLE IF NOT EXISTS public.project_photos
 CREATE TABLE IF NOT EXISTS public.project_progress
 (
     id bigserial NOT NULL,
-    project_id bigint,
+    project_service_id bigint NOT NULL,
     progress_description text COLLATE pg_catalog."default",
     progress_date date,
     visible boolean DEFAULT true,
-    CONSTRAINT project_progress_pkey PRIMARY KEY (id)
-);
+    service_id bigint NOT NULL,
+    CONSTRAINT project_progress_pkey PRIMARY KEY (id),
+    CONSTRAINT project_progress_project_service_id_fkey FOREIGN KEY (project_service_id, service_id)
+        REFERENCES public.project_services (project_id, service_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.project_progress
+    OWNER TO postgres;
 
 CREATE TABLE IF NOT EXISTS public.project_service_employees
 (
